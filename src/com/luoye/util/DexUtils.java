@@ -12,18 +12,29 @@ import java.util.regex.Pattern;
  * @author luoyesiqiu
  */
 public class DexUtils {
-    public static void repair(String dexFile, List<CodeItem> codeItems){
+    public static void repair(String dexFile, List<CodeItem> codeItems,boolean outputLog){
         RandomAccessFile randomAccessFile = null;
         String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex","_repair.dex") : dexFile + "_repair.dex";
         //copy dex
         byte[] dexData = IoUtils.readFile(dexFile);
+        int dexSize = dexData.length;
         IoUtils.writeFile(outFile,dexData);
         try{
             randomAccessFile = new RandomAccessFile(outFile,"rw");
             for(int i = 0 ; i < codeItems.size();i++){
                 CodeItem codeItem = codeItems.get(i);
-                randomAccessFile.seek(codeItem.getOffset());
-                randomAccessFile.write(codeItem.getByteCode());
+                long offset = codeItem.getOffset();
+                if(offset > dexSize){
+                    if(outputLog) {
+                        System.err.printf("Skip invalid offset %d corresponding method : '%s'.\n", offset, codeItem.getMethodName());
+                    }
+                    continue;
+                }
+                if(outputLog) {
+                    System.out.printf("Patch method : %s \n", codeItem.getMethodName());
+                }
+                randomAccessFile.seek(offset);
+                randomAccessFile.write(codeItem.getInsns());
             }
         }
         catch (Exception e){
@@ -46,10 +57,20 @@ public class DexUtils {
         Pattern pattern = Pattern.compile("\\{name:(.+?),method_idx:(\\d+),offset:(\\d+),code_item_len:(\\d+),ins:(.+?)\\}");
         Matcher matcher = pattern.matcher(input);
         while(matcher.find()){
+            String methodName = matcher.group(1);
+            int methodIndex = Integer.parseInt(matcher.group(2));
             int offset = Integer.parseInt(matcher.group(3));
+            int insLength = Integer.parseInt(matcher.group(4));
             String insBase64 = matcher.group(5);
-            byte[] ins = Base64.getDecoder().decode(insBase64);
-            CodeItem codeItem = new CodeItem(offset,ins);
+            byte[] ins = null;
+            try {
+                ins = Base64.getDecoder().decode(insBase64);
+            }
+            catch (Exception e){
+                System.err.printf("Error to decode \"%s\"\n",insBase64);
+                continue;
+            }
+            CodeItem codeItem = new CodeItem(methodName,methodIndex,offset,insLength,ins);
             codeItems.add(codeItem);
         }
 

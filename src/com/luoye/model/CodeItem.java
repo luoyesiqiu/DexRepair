@@ -5,9 +5,28 @@ import java.util.Arrays;
  * @author luoyesiqiu
  */
 public  class CodeItem{
-    public CodeItem(long offset, byte[] byteCode) {
+    public CodeItem(String methodName, int methodIndex, long offset, int insnsLength, byte[] insns) {
+        this.methodName = methodName;
+        this.methodIndex = methodIndex;
         this.offset = offset;
-        this.byteCode = byteCode;
+        this.insnsLength = insnsLength;
+        this.insns = insns;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
+    public int getMethodIndex() {
+        return methodIndex;
+    }
+
+    public void setMethodIndex(int methodIndex) {
+        this.methodIndex = methodIndex;
     }
 
     public long getOffset() {
@@ -18,22 +37,36 @@ public  class CodeItem{
         this.offset = offset;
     }
 
-    public byte[] getByteCode() {
-        return byteCode;
+    public int getInsnsLength() {
+        return insnsLength;
     }
 
-    public void setByteCode(byte[] byteCode) {
-        this.byteCode = byteCode;
+    public void setInsnsLength(int insnsLength) {
+        this.insnsLength = insnsLength;
+    }
+
+    public byte[] getInsns() {
+        return insns;
+    }
+
+    public void setInsns(byte[] insns) {
+        this.insns = insns;
     }
 
     @Override
     public String toString() {
         return "CodeItem{" +
-                "offset=" + offset +
-                ", byteCode=" + Arrays.toString(byteCode) +
+                "methodName='" + methodName + '\'' +
+                ", methodIndex=" + methodIndex +
+                ", offset=" + offset +
+                ", insnsLength=" + insnsLength +
+                ", insns=" + Arrays.toString(insns) +
                 '}';
     }
 
+    private String methodName;
+    private int methodIndex;
     private long offset;
-    private byte[] byteCode;
+    private int insnsLength;
+    private byte[] insns;
 }

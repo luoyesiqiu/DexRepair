@@ -14,20 +14,43 @@ public class DexRepair {
 
     public static void main(String[] args) {
         if(args.length < 2){
-            System.out.println("Usage:\n\tjava -jar DexRepair.jar <DexFile> <BinFile>");
+            printUsage();
             return;
         }
-        String dexPath = args[0];
-        String binPath = args[1];
+        boolean isOutputLog = false;
+        String dexPath = null;
+        String binPath = null;
+        switch(args.length){
+            case 2:
+                dexPath = args[0];
+                binPath = args[1];
+                break;
+            case 3:
+                switch (args[0]){
+                    case "--log":
+                        isOutputLog = true;
+                        break;
+                }
+                dexPath = args[1];
+                binPath = args[2];
+                break;
+            default:
+                printUsage();
+                return;
+        }
         if(new File(dexPath).exists() && new File(binPath).exists()) {
             byte[] data = IoUtils.readFile(binPath);
             List<CodeItem> items = DexUtils.convertToCodeItems(data);
-            DexUtils.repair(dexPath, items);
-            System.out.println("success");
+            DexUtils.repair(dexPath, items,isOutputLog);
+            System.out.println("All done.");
         }
         else{
-            System.out.println("Dex file or bin file not exists!");
+            System.err.println("Dex file or bin file not exists!");
         }
+    }
+
+    private static void printUsage(){
+        System.err.println("Usage:\n\tjava -jar DexRepair.jar [--log] <DexFile> <BinFile>");
     }
 
 }
