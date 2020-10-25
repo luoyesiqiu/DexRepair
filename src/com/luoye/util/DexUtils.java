@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class DexUtils {
     public static void repair(String dexFile, List<CodeItem> codeItems,boolean outputLog){
         RandomAccessFile randomAccessFile = null;
-        String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex","_repair.dex") : dexFile + "_repair.dex";
+        String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex$","_repair.dex") : dexFile + "_repair.dex";
         //copy dex
         byte[] dexData = IoUtils.readFile(dexFile);
         int dexSize = dexData.length;
