@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * @author luoyesiqiu
  */
 public class DexUtils {
+    private static byte[] DEX_FILE_MAGIC = { 0x64,0x65,0x78,0x0a,0x30,0x33,0x39,0x00};
     public static void repair(String dexFile, List<CodeItem> codeItems,boolean outputLog){
         RandomAccessFile randomAccessFile = null;
         String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex$","_repair.dex") : dexFile + "_repair.dex";
@@ -21,6 +22,7 @@ public class DexUtils {
         IoUtils.writeFile(outFile,dexData);
         try{
             randomAccessFile = new RandomAccessFile(outFile,"rw");
+            fixDexMagic(randomAccessFile);
             for(int i = 0 ; i < codeItems.size();i++){
                 CodeItem codeItem = codeItems.get(i);
                 long offset = codeItem.getOffset();
@@ -42,6 +44,16 @@ public class DexUtils {
         }
         finally {
             IoUtils.close(randomAccessFile);
+        }
+    }
+
+    private static void fixDexMagic(RandomAccessFile dexRandomAccessFile) throws Exception{
+        int firstPartOfMagic = dexRandomAccessFile.readInt();
+        int secondPartOfMagic = dexRandomAccessFile.readInt();
+
+        if(firstPartOfMagic == 0 || secondPartOfMagic == 0){
+            dexRandomAccessFile.seek(0);
+            dexRandomAccessFile.write(DEX_FILE_MAGIC);
         }
     }
     /**
