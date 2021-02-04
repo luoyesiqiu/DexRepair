@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * @author luoyesiqiu
  */
 public class DexUtils {
-    private static byte[] DEX_FILE_MAGIC = { 0x64,0x65,0x78,0x0a,0x30,0x33,0x39,0x00};
+    private static final byte[] DEX_FILE_MAGIC = { 0x64,0x65,0x78,0x0a,0x30,0x33,0x35,0x00};
     public static void repair(String dexFile, List<CodeItem> codeItems,boolean outputLog){
         RandomAccessFile randomAccessFile = null;
         String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex$","_repair.dex") : dexFile + "_repair.dex";
@@ -58,7 +58,7 @@ public class DexUtils {
     }
     /**
      * .bin file item sample
-     * {name:android.view.View com.yunke.helper.ui.databinding.FragmentMineBinding.getRoot(),method_idx:3962,offset:1474972,code_item_len:26,ins:AgABAAEAAABPUxMABQAAAG4QeQ8BAAwAEQA=}
+     * {name:android.view.View com.luoye.helper.ui.databinding.FragmentMineBinding.getRoot(),method_idx:3962,offset:1474972,code_item_len:26,ins:AgABAAEAAABPUxMABQAAAG4QeQ8BAAwAEQA=}
      * @param bytes
      * @return
      */
