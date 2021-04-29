@@ -41,8 +41,7 @@ public class DexRepair {
         if(new File(dexPath).exists() && new File(binPath).exists()) {
             byte[] data = IoUtils.readFile(binPath);
             List<CodeItem> items = DexUtils.convertToCodeItems(data);
-            DexUtils.repair(dexPath, items,isOutputLog);
-            System.out.println("All done.");
+            DexUtils.patch(dexPath, items,isOutputLog);
         }
         else{
             System.err.println("Dex file or bin file not exists!");

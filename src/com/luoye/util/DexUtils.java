@@ -1,19 +1,88 @@
 package com.luoye.util;
 
+import com.android.dex.ClassData;
+import com.android.dex.ClassDef;
+import com.android.dex.Dex;
 import com.luoye.model.CodeItem;
 
+import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 /**
  * @author luoyesiqiu
  */
 public class DexUtils {
     private static final byte[] DEX_FILE_MAGIC = { 0x64,0x65,0x78,0x0a,0x30,0x33,0x35,0x00};
-    public static void repair(String dexFile, List<CodeItem> codeItems,boolean outputLog){
+
+    public static void patch(String dexFile, List<CodeItem> codeItems, boolean outputLog) {
+
+        String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex$","_repair.dex") : dexFile + "_repair.dex";
+        File outDexFile = new File(outFile);
+        if(outDexFile.exists()){
+            outDexFile.delete();
+        }
+        byte[] dexData = IoUtils.readFile(dexFile);
+        IoUtils.writeFile(outFile,dexData);
+        File inDexFile = new File(dexFile);
+        Map<Integer, byte[]> map = codeItems.stream().collect(Collectors.toMap(CodeItem::getMethodIndex, CodeItem::getInsns));
+        RandomAccessFile randomAccessFile = null;
+        int patchCount = 0;
+        try {
+            randomAccessFile = new RandomAccessFile(outFile, "rw");
+            Dex dex = new Dex(inDexFile);
+            fixDexMagic(randomAccessFile);
+            Iterable<ClassDef> classDefs = dex.classDefs();
+            int classIdx = 0;
+            for (Iterator<ClassDef> it = classDefs.iterator(); it.hasNext(); ) {
+                ClassDef classDef = it.next();
+                ClassData classData = null;
+                try {
+                    classData = dex.readClassData(classDef);
+                }catch (Exception e){
+                    classIdx++;
+                    continue;
+                }
+                ClassData.Method[] methods = classData.allMethods();
+                for (int i = 0; i < methods.length; i++) {
+                    ClassData.Method method = methods[i];
+                    int offsetInstructions = method.getCodeOffset() + 16;
+                    int insSize = 0;
+                    try {
+                        insSize = dex.readCode(method).getInstructions().length;
+                    }
+                    catch (Exception e){
+
+                    }
+                    byte[] bytes = map.get(method.getMethodIndex());
+                    if (bytes != null) {
+                        int writeLen = Math.min(insSize * 2, bytes.length);
+                        if(outputLog) {
+                            System.out.println(Arrays.toString(bytes));
+                            System.out.printf("Patching %d bytes to method_idx %d of class_idx %d...\n",writeLen,method.getMethodIndex(),classIdx);
+                        }
+                        randomAccessFile.seek(offsetInstructions);
+                        randomAccessFile.write(bytes, 0, writeLen);
+                        patchCount++;
+                    }
+                }
+                classIdx++;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            IoUtils.close(randomAccessFile);
+        }
+        System.out.printf("Patched %d method(s).\n",patchCount);
+    }
+
+    @Deprecated
+    public static void repair(String dexFile, List<CodeItem> codeItems, boolean outputLog){
         RandomAccessFile randomAccessFile = null;
         String outFile = dexFile.endsWith(".dex") ? dexFile.replaceAll("\\.dex$","_repair.dex") : dexFile + "_repair.dex";
         //copy dex
