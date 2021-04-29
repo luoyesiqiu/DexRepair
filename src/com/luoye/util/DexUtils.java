@@ -61,7 +61,6 @@ public class DexUtils {
                     if (bytes != null) {
                         int writeLen = Math.min(insSize * 2, bytes.length);
                         if(outputLog) {
-                            System.out.println(Arrays.toString(bytes));
                             System.out.printf("Patching %d bytes to method_idx %d of class_idx %d...\n",writeLen,method.getMethodIndex(),classIdx);
                         }
                         randomAccessFile.seek(offsetInstructions);
