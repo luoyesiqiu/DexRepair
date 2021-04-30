@@ -33,8 +33,10 @@ public class DexUtils {
         int patchCount = 0;
         try {
             randomAccessFile = new RandomAccessFile(outFile, "rw");
+            RandomAccessFile randomAccessInFile = new RandomAccessFile(dexFile,"rw");
+            fixDexMagic(randomAccessInFile);
+            IoUtils.close(randomAccessInFile);
             Dex dex = new Dex(inDexFile);
-            fixDexMagic(randomAccessFile);
             Iterable<ClassDef> classDefs = dex.classDefs();
             int classIdx = 0;
             for (Iterator<ClassDef> it = classDefs.iterator(); it.hasNext(); ) {
