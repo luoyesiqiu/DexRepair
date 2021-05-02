@@ -51,7 +51,7 @@ public class DexUtils {
                 ClassData.Method[] methods = classData.allMethods();
                 for (int i = 0; i < methods.length; i++) {
                     ClassData.Method method = methods[i];
-                    int offsetInstructions = method.getCodeOffset() + 16;
+                    int offsetInstructions = method.getCodeOffset() ;// 16;
                     int insSize = 0;
                     try {
                         insSize = dex.readCode(method).getInstructions().length;
@@ -61,9 +61,10 @@ public class DexUtils {
                     }
                     byte[] bytes = map.get(method.getMethodIndex());
                     if (bytes != null) {
-                        int writeLen = Math.min(insSize * 2, bytes.length);
+                        int writeLen =bytes.length;// Math.min(insSize * 2, bytes.length);
                         if(outputLog) {
-                            System.out.printf("Patching %d bytes to method_idx %d of class_idx %d...\n",writeLen,method.getMethodIndex(),classIdx);
+                            System.out.printf("offset:%d, methodindex: %d, inssize:%d, Patching %d bytes to method_idx %d of class_idx %d...\n",offsetInstructions ,method.getMethodIndex(),insSize*2,writeLen,method.getMethodIndex(),classIdx);
+ 		
                         }
                         randomAccessFile.seek(offsetInstructions);
                         randomAccessFile.write(bytes, 0, writeLen);
