@@ -71,14 +71,14 @@ public final class Dex {
      * Creates a new dex that reads from {@code data}. It is an error to modify
      * {@code data} after using it to create a dex buffer.
      */
-    public Dex(byte[] data) throws IOException {
-        this(ByteBuffer.wrap(data));
+    public Dex(byte[] data,boolean checkMagic) throws IOException {
+        this(ByteBuffer.wrap(data),checkMagic);
     }
 
-    private Dex(ByteBuffer data) throws IOException {
+    private Dex(ByteBuffer data,boolean checkMagic) throws IOException {
         this.data = data;
         this.data.order(ByteOrder.LITTLE_ENDIAN);
-        this.tableOfContents.readFrom(this);
+        this.tableOfContents.readFrom(this,checkMagic);
     }
 
     /**
@@ -92,9 +92,9 @@ public final class Dex {
     /**
      * Creates a new dex buffer of the dex in {@code in}, and closes {@code in}.
      */
-    public Dex(InputStream in) throws IOException {
+    public Dex(InputStream in,boolean checkMagic) throws IOException {
         try {
-            loadFrom(in);
+            loadFrom(in,checkMagic);
         } finally {
             in.close();
         }
@@ -103,13 +103,13 @@ public final class Dex {
     /**
      * Creates a new dex buffer from the dex file {@code file}.
      */
-    public Dex(File file) throws IOException {
+    public Dex(File file,boolean checkMagic) throws IOException {
         if (FileUtils.hasArchiveSuffix(file.getName())) {
             ZipFile zipFile = new ZipFile(file);
             ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
             if (entry != null) {
                 try (InputStream inputStream = zipFile.getInputStream(entry)) {
-                    loadFrom(inputStream);
+                    loadFrom(inputStream,checkMagic);
                 }
                 zipFile.close();
             } else {
@@ -117,7 +117,7 @@ public final class Dex {
             }
         } else if (file.getName().endsWith(".dex")) {
             try (InputStream inputStream = new FileInputStream(file)) {
-                loadFrom(inputStream);
+                loadFrom(inputStream,checkMagic);
             }
         } else {
             throw new DexException("unknown output extension: " + file);
@@ -127,7 +127,7 @@ public final class Dex {
     /**
      * It is the caller's responsibility to close {@code in}.
      */
-    private void loadFrom(InputStream in) throws IOException {
+    private void loadFrom(InputStream in,boolean checkMagic) throws IOException {
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
 
@@ -138,7 +138,7 @@ public final class Dex {
 
         this.data = ByteBuffer.wrap(bytesOut.toByteArray());
         this.data.order(ByteOrder.LITTLE_ENDIAN);
-        this.tableOfContents.readFrom(this);
+        this.tableOfContents.readFrom(this,checkMagic);
     }
 
     private static void checkBounds(int index, int length) {

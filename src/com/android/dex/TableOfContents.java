@@ -68,16 +68,16 @@ public final class TableOfContents {
         signature = new byte[20];
     }
 
-    public void readFrom(Dex dex) throws IOException {
-        readHeader(dex.open(0));
+    public void readFrom(Dex dex,boolean checkMagic) throws IOException {
+        readHeader(dex.open(0),checkMagic);
         readMap(dex.open(mapList.off));
         computeSizesFromOffsets();
     }
 
-    private void readHeader(Dex.Section headerIn) throws UnsupportedEncodingException {
+    private void readHeader(Dex.Section headerIn,boolean checkMagic) throws UnsupportedEncodingException {
         byte[] magic = headerIn.readByteArray(8);
 
-        if (!DexFormat.isSupportedDexMagic(magic)) {
+        if (!DexFormat.isSupportedDexMagic(magic) && checkMagic) {
             String msg =
                     String.format("Unexpected magic: [0x%02x, 0x%02x, 0x%02x, 0x%02x, "
                                   + "0x%02x, 0x%02x, 0x%02x, 0x%02x]",

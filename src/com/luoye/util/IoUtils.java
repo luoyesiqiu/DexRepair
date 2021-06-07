@@ -4,6 +4,8 @@ import java.io.*;
  * @author luoyesiqiu
  */
 public class IoUtils {
+    public static final String ROOT_OF_OUT_DIR = System.getProperty("java.io.tmpdir");
+
     public static byte[] readFile(String file){
         FileInputStream fileInputStream = null;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
