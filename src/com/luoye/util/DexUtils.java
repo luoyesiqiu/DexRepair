@@ -60,12 +60,13 @@ public class DexUtils {
                     }
                     byte[] bytes = map.get(method.getMethodIndex());
                     if (bytes != null) {
-                        int writeLen = Math.min(insSize * 2, bytes.length);
+                        int min = Math.min(insSize * 2, bytes.length);
+                        int max = Math.max(insSize * 2, bytes.length);
                         if (outputLog) {
-                            System.out.printf("Patching %d bytes to method_idx %d of class_idx %d...\n", writeLen, method.getMethodIndex(), classIdx);
+                            System.out.printf("Patching %d bytes to method_idx %d of class_idx %d...\n", min, method.getMethodIndex(), classIdx);
                         }
                         randomOutAccessFile.seek(offsetInstructions);
-                        randomOutAccessFile.write(bytes, 0, writeLen);
+                        randomOutAccessFile.write(bytes, max - (insSize * 2) , min);
                         patchCount++;
                     }
                 }
