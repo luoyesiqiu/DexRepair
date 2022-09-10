@@ -13,24 +13,30 @@ import java.util.List;
 public class DexRepair {
 
     public static void main(String[] args) {
-        if(args.length < 2){
+        if(args.length < 1 || (args.length == 1 && hasLogFlag(args))){
             printUsage();
             return;
         }
         boolean isOutputLog = false;
         String dexPath = null;
         String binPath = null;
+        if(hasLogFlag(args)){
+            isOutputLog = true;
+        }
         switch(args.length){
-            case 2:
+            case 1:
                 dexPath = args[0];
-                binPath = args[1];
+                break;
+            case 2:
+                if(isOutputLog){
+                    dexPath = args[1];
+                }
+                else{
+                    dexPath = args[0];
+                    binPath = args[1];
+                }
                 break;
             case 3:
-                switch (args[0]){
-                    case "--log":
-                        isOutputLog = true;
-                        break;
-                }
                 dexPath = args[1];
                 binPath = args[2];
                 break;
@@ -38,18 +44,33 @@ public class DexRepair {
                 printUsage();
                 return;
         }
-        if(new File(dexPath).exists() && new File(binPath).exists()) {
-            byte[] data = IoUtils.readFile(binPath);
-            List<CodeItem> items = DexUtils.convertToCodeItems(data);
-            DexUtils.patch(dexPath, items,isOutputLog);
+
+        if(dexPath != null && new File(dexPath).exists()) {
+            DexUtils dexUtils = new DexUtils(dexPath,binPath,isOutputLog);
+            dexUtils.fixDexMagic();
+
+            if(binPath != null && new File(binPath).exists()){
+                dexUtils.patch();
+            }
+            dexUtils.updateDexHashes();
+
+            System.out.println("All done.");
         }
         else{
             System.err.println("Dex file or bin file not exists!");
         }
     }
 
+    private static boolean hasLogFlag(String[] args){
+        if(args == null || args.length == 0){
+            return false;
+        }
+        return "--log".equals(args[0]);
+    }
+
+
     private static void printUsage(){
-        System.err.println("Usage:\n\tjava -jar DexRepair.jar [--log] <DexFile> <BinFile>");
+        System.err.println("Usage:\n\tjava -jar DexRepair.jar [--log] <DexFile> [PatchFile]");
     }
 
 }
